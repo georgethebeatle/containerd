@@ -85,12 +85,12 @@ func start(log *os.File) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := p.Close(); err != nil {
-			writeMessage(log, "warn", err)
-		}
-	}()
-	if err := p.create(); err != nil {
+	// defer func() {
+	// 	if err := p.Close(); err != nil {
+	// 		writeMessage(log, "warn", err)
+	// 	}
+	// }()
+	if err := p.create(log); err != nil {
 		p.delete()
 		return err
 	}

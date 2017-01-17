@@ -85,9 +85,9 @@ func newProcess(id, bundle, runtimeName string) (*process, error) {
 		p.checkpoint = cpt
 		p.checkpointPath = s.CheckpointPath
 	}
-	if err := p.openIO(); err != nil {
-		return nil, err
-	}
+	// if err := p.openIO(); err != nil {
+	// 	return nil, err
+	// }
 	return p, nil
 }
 
@@ -117,8 +117,10 @@ func loadCheckpoint(checkpointPath string) (*checkpoint, error) {
 	return &cpt, nil
 }
 
-func (p *process) create() error {
+func (p *process) create(log *os.File) error {
+	writeMessage(log, "error", fmt.Errorf("starting create\n"))
 	cwd, err := os.Getwd()
+	writeMessage(log, "error", fmt.Errorf("cwd: %s\n", cwd))
 	if err != nil {
 		return err
 	}
@@ -131,7 +133,7 @@ func (p *process) create() error {
 		args = append(args, "exec",
 			"-d",
 			"--process", filepath.Join(cwd, "process.json"),
-			"--console", p.consolePath,
+			//"--console", p.consolePath,
 		)
 	} else if p.checkpoint != nil {
 		args = append(args, "restore",
@@ -171,11 +173,13 @@ func (p *process) create() error {
 		"--pid-file", filepath.Join(cwd, "pid"),
 		p.id,
 	)
+
+	writeMessage(log, "error", fmt.Errorf("runc command: %s\n", args))
 	cmd := exec.Command(p.runtime, args...)
 	cmd.Dir = p.bundle
-	cmd.Stdin = p.stdio.stdin
-	cmd.Stdout = p.stdio.stdout
-	cmd.Stderr = p.stdio.stderr
+	// cmd.Stdin = p.stdio.stdin
+	// cmd.Stdout = p.stdio.stdout
+	// cmd.Stderr = p.stdio.stderr
 	// Call out to setPDeathSig to set SysProcAttr as elements are platform specific
 	cmd.SysProcAttr = setPDeathSig()
 
@@ -191,8 +195,8 @@ func (p *process) create() error {
 		// Since current logic dictates that we need a pid at the end of p.create
 		// we need to call runtime start as well on Solaris hence we need the
 		// pipes to stay open.
-		p.stdio.stdout.Close()
-		p.stdio.stderr.Close()
+		// p.stdio.stdout.Close()
+		// p.stdio.stderr.Close()
 	}
 	if err := cmd.Wait(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {

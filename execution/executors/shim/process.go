@@ -47,7 +47,7 @@ func newProcess(ctx context.Context, o newProcessOpts) (*process, error) {
 		}
 	}()
 
-	cmd, err := newShim(o, procStateDir)
+	cmdc err := newShim(o, procStateDir)
 	if err != nil {
 		return nil, err
 	}
